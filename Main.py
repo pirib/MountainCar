@@ -126,11 +126,15 @@ class NN():
 
 # SARSA
 
+# Parameters
 discount = 0.95
 lrate = 0.1
 number_tiles = 5
+num_steps = 500
+episodes = 100
 
 
+# One run of a SARSA algorithm
 def run(state,action, SAPs, env, step):
     
     # Add new action state
@@ -162,8 +166,8 @@ def run(state,action, SAPs, env, step):
 Q = NN(number_tiles)
 
 
-# Run SARSA episodes number of times
-for episode in range(100):
+# Atually run SARSA episodes number of times
+for episode in range(episodes):
     
     print(episode)
     # visited SAPs are saved here
@@ -175,8 +179,8 @@ for episode in range(100):
     state = env.get_state()
     action = Q.policy(state)
     
-    # Repeat until we have reached the final state or 1000 steps have been used up
-    run(state, action, SAPs, env, 500)
+    # Repeat until we have reached the final state or num_steps steps have been used up
+    run(state, action, SAPs, env, num_steps)
 
     
     
