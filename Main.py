@@ -20,7 +20,7 @@ def argmax(l, f = lambda e : e, *args):
 class Env():
      
     # Initialize the environment according to the specs
-    def __init__(self, number_tiles, time_step = 20):
+    def __init__(self, number_tiles, time_step = 5):
         
         # Starting in the lowest point in the valley
         self.x = -pi/6
@@ -46,7 +46,8 @@ class Env():
             self.velocity += (0.001)*move - 0.0025*cos(3*self.x)
             self.x += self.velocity
             # Add a frame into the animation every fifth time step
-            if self.time_step % 10 == 0: self.placements.append(self.x)
+        
+        self.placements.append(self.x)
     
     
     # Hardcoded actions - at any time the car can move right, do nothing, or go left
@@ -164,13 +165,12 @@ def run(state,action, SAPs, env, step):
         Q.train( sap, delta*lrate)
     
     # 5. If we are in the terminal state, we are done
-    if env.is_terminal() or step < 1:
+    if env.is_terminal() or step > num_steps:
         if env.is_terminal():
             print("Reached the peak!")
             print("Steps taken " + str(step))
-            return step
     else:
-        run(nextstate,nextaction, SAPs, env, step-1)
+        run(nextstate,nextaction, SAPs, env, step+1)
         
 # Function for initiation of animation
 def init():
@@ -191,7 +191,9 @@ def update(frame):
 # Initialize the neural network, our Q(s,a) function
 Q = NN(number_tiles)
 
+# For plotting
 amount_of_moves = []
+
 
 # Atually run SARSA episodes number of times
 for episode in range(episodes):
@@ -210,13 +212,11 @@ for episode in range(episodes):
     action = Q.policy(state)
     
     # Repeat until we have reached the final state or num_steps steps have been used up
-    steps = run(state, action, SAPs, env, num_steps)
+    run(state, action, SAPs, env, 0)
 
-    # Appending the amount of moves needed to get the car on the mountain each episode
-    amount_of_moves.append(steps)
-
+    # Animating the episode
     if episode % 50 == 0 or episode == episodes-1:
-        # Animating the episode
+
         fig, ax = plt.subplots()
         ln, = plt.plot([], [], 'ro')
         ani = FuncAnimation(fig, update, frames=env.placements,
@@ -224,6 +224,8 @@ for episode in range(episodes):
         
         # Saving the animated gif
         ani.save('Animations/' + str(episode) + '.gif', writer='PillowWriter')
+
+
 
 # Plotting the scatter plot
 plt.clf()
