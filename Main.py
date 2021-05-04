@@ -168,6 +168,7 @@ def run(state,action, SAPs, env, step):
         if env.is_terminal():
             print("Reached the peak!")
             print("Steps taken " + str(step))
+            return step
     else:
         run(nextstate,nextaction, SAPs, env, step-1)
         
@@ -209,12 +210,12 @@ for episode in range(episodes):
     action = Q.policy(state)
     
     # Repeat until we have reached the final state or num_steps steps have been used up
-    run(state, action, SAPs, env, num_steps)
+    steps = run(state, action, SAPs, env, num_steps)
 
     # Appending the amount of moves needed to get the car on the mountain each episode
-    amount_of_moves.append(len(env.placements))
+    amount_of_moves.append(steps)
 
-    if episode % 50 == 0:
+    if episode % 50 == 0 or episode == episodes-1:
         # Animating the episode
         fig, ax = plt.subplots()
         ln, = plt.plot([], [], 'ro')
@@ -227,8 +228,8 @@ for episode in range(episodes):
 # Plotting the scatter plot
 plt.clf()
 plt.figure()
-plt.xlim(0, episodes+1)
-plt.ylim(0, num_steps+1)
+plt.xlim(0, episodes+10)
+plt.ylim(0, num_steps+10)
 plt.xlabel('Episode')
 plt.ylabel('Steps')
 plt.plot(range(episodes), amount_of_moves, 'bo')
