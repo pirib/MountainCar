@@ -19,7 +19,7 @@ def argmax(l, f = lambda e : e, *args):
 class Env():
      
     # Initialize the environment according to the specs
-    def __init__(self, number_tiles):
+    def __init__(self, number_tiles, time_step = 20):
         
         # Starting in the lowest point in the valley
         self.x = -pi/6
@@ -28,6 +28,8 @@ class Env():
         # Set the tiles
         self.interval = np.linspace(0.0, 0.16, number_tiles+1)
         
+        # Time step for the movemenet
+        self.time_step = time_step
         
     # Actually makes a move, and gets the environment into a new state
     def make_move(self, action):
@@ -37,9 +39,11 @@ class Env():
         elif action[2] == 1: move = 1
         else: Exception("Action tuple does not make sense - " + action ) 
         
-        self.velocity += 20*((0.001)*move - 0.0025*cos(3*self.x))
-        self.x += self.velocity
-        self.plot_state()
+        for i in range(self.time_step):
+            self.velocity += (0.001)*move - 0.0025*cos(3*self.x)
+            self.x += self.velocity
+        
+        #self.plot_state()
     
     
     # Hardcoded actions - at any time the car can move right, do nothing, or go left
@@ -68,14 +72,14 @@ class Env():
     
     # Returns true if the car reached the top
     def is_terminal(self):
-        if self.x >= pi / 6 :
+        if self.x >= 0.6 :
             return True
         return False
     
     # Returns positive reward for the terminal state, -1 for all other states
     def get_reward(self):
         if self.is_terminal():
-            return 1000
+            return 100
         else:
             return -1
 
@@ -120,7 +124,7 @@ class NN():
         y = np.array(y)
         y = np.expand_dims(y,0)
         
-        self.model.fit( x, y, epochs = 8, verbose = 0)
+        self.model.fit( x, y, epochs = 16, verbose = 0)
         
 
 
@@ -129,8 +133,8 @@ class NN():
 # Parameters
 discount = 0.95
 lrate = 0.1
-number_tiles = 5
-num_steps = 500
+number_tiles = 8
+num_steps = 1000
 episodes = 100
 
 
@@ -156,9 +160,11 @@ def run(state,action, SAPs, env, step):
         Q.train( sap, delta*lrate)
     
     # 5. If we are in the terminal state, we are done
-    if (not env.is_terminal() ) and step > 1 :
+    if env.is_terminal() or step < 1:
         if env.is_terminal():
             print("yeah!")
+            print("Steps taken " + str(step))
+    else:
         run(nextstate,nextaction, SAPs, env, step-1)
         
 
