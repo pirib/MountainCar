@@ -2,6 +2,7 @@ from math import pi, cos
 import numpy as np
 from random import random, choice
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 import tensorflow as tf
 
@@ -24,6 +25,8 @@ class Env():
         # Starting in the lowest point in the valley
         self.x = -pi/6
         self.velocity = 0
+
+        self.placements = []
         
         # Set the tiles
         self.interval = np.linspace(0.0, 0.16, number_tiles+1)
@@ -42,8 +45,8 @@ class Env():
         for i in range(self.time_step):
             self.velocity += (0.001)*move - 0.0025*cos(3*self.x)
             self.x += self.velocity
-        
-        #self.plot_state()
+            # Add a frame into the animation every fifth time step
+            if self.time_step % 10 == 0: self.placements.append(self.x)
     
     
     # Hardcoded actions - at any time the car can move right, do nothing, or go left
@@ -62,8 +65,7 @@ class Env():
 
     # Plots the car on the graph
     def plot_state(self):
-
-        x = np.arange(-2, np.pi ,0.1)   # start,stop,step
+        x = np.arange(-np.pi/2, np.pi/4 ,0.1)   # start,stop,step
         y = np.cos(3*(x + pi / 2))
         
         plt.plot(x,y)
@@ -162,20 +164,35 @@ def run(state,action, SAPs, env, step):
     # 5. If we are in the terminal state, we are done
     if env.is_terminal() or step < 1:
         if env.is_terminal():
-            print("yeah!")
             print("Steps taken " + str(step))
     else:
         run(nextstate,nextaction, SAPs, env, step-1)
         
+# Function for initiation of animation
+def init():
+    x = np.arange(-np.pi/2, np.pi/4, 0.1)   # start,stop,step
+    y = np.cos(3*(x + np.pi / 2))
+    plt.plot(x,y, 'k-')
+    ax.set_xlim(-np.pi/2, np.pi/6)
+    ax.set_ylim(-1.1, 1.1)
+    return ln,
+
+# Function for updating the frames of animation
+def update(frame):
+    xdata = frame
+    ydata = np.cos(3*(frame+np.pi/2))
+    ln.set_data(xdata, ydata)
+    return ln,
 
 # Initialize the neural network, our Q(s,a) function
 Q = NN(number_tiles)
 
+amount_of_moves = []
 
 # Atually run SARSA episodes number of times
 for episode in range(episodes):
     
-    print(episode)
+    print("Episode: " + str(episode))
     # visited SAPs are saved here
     SAPs = []
 
@@ -188,8 +205,25 @@ for episode in range(episodes):
     # Repeat until we have reached the final state or num_steps steps have been used up
     run(state, action, SAPs, env, num_steps)
 
-    
-    
-    
-    
+    # Appending the amount of moves needed to get the car on the mountain each episode
+    amount_of_moves.append(len(env.placements))
 
+    if episode % 50 == 0:
+        # Animating the episode
+        fig, ax = plt.subplots()
+        ln, = plt.plot([], [], 'ro')
+        ani = FuncAnimation(fig, update, frames=env.placements,
+                        init_func=init, blit=True)
+        
+        # Saving the animated gif
+        ani.save('Animations/' + str(episode) + '.gif', writer='PillowWriter')
+
+# Plotting the scatter plot
+plt.clf()
+plt.figure()
+plt.xlim(0, episodes+1)
+plt.ylim(0, num_steps+1)
+plt.xlabel('Episode')
+plt.ylabel('Steps')
+plt.plot(range(episodes), amount_of_moves, 'bo')
+plt.savefig('Scatter.png')
