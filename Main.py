@@ -138,6 +138,8 @@ lrate = 0.1
 number_tiles = 8
 num_steps = 1000
 episodes = 100
+grate = 0.9
+grate_decay_rate = 0.9
 
 
 # One run of a SARSA algorithm
@@ -152,7 +154,7 @@ def run(state,action, SAPs, env, step):
     
     # 2. Choose the next action
     nextstate = env.get_state()
-    nextaction = Q.policy(nextstate) if random() < 0.2 else choice(((0,0,1), (0,1,0), (1,0,0)))
+    nextaction = Q.policy(nextstate) if random() < grate else choice(((0,0,1), (0,1,0), (1,0,0)))
     
     # 3. Calculate the change        
     delta = reward + discount*Q.evaluate(nextstate + nextaction) - Q.evaluate( state + action )
@@ -164,6 +166,7 @@ def run(state,action, SAPs, env, step):
     # 5. If we are in the terminal state, we are done
     if env.is_terminal() or step < 1:
         if env.is_terminal():
+            print("Reached the peak!")
             print("Steps taken " + str(step))
     else:
         run(nextstate,nextaction, SAPs, env, step-1)
@@ -193,6 +196,9 @@ amount_of_moves = []
 for episode in range(episodes):
     
     print("Episode: " + str(episode))
+    # Decay the grate
+    grate *= grate_decay_rate
+    
     # visited SAPs are saved here
     SAPs = []
 
