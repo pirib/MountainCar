@@ -138,7 +138,7 @@ discount = 0.95
 lrate = 0.1
 number_tiles = 8
 num_steps = 1000
-episodes = 100
+episodes = 10
 grate = 0.9
 grate_decay_rate = 0.9
 
@@ -168,7 +168,7 @@ def run(state,action, SAPs, env, step):
     if env.is_terminal() or step > num_steps:
         if env.is_terminal():
             print("Reached the peak!")
-            print("Steps taken " + str(step))
+            print("Steps taken " + str(step+1))
     else:
         run(nextstate,nextaction, SAPs, env, step+1)
         
@@ -214,8 +214,10 @@ for episode in range(episodes):
     # Repeat until we have reached the final state or num_steps steps have been used up
     run(state, action, SAPs, env, 0)
 
+    amount_of_moves.append(len(env.placements))
+
     # Animating the episode
-    if episode % 50 == 0 or episode == episodes-1:
+    if episode == 0 or episode == episodes/2 or episode == episodes-1:
 
         fig, ax = plt.subplots()
         ln, = plt.plot([], [], 'ro')
@@ -225,13 +227,11 @@ for episode in range(episodes):
         # Saving the animated gif
         ani.save('Animations/' + str(episode) + '.gif', writer='PillowWriter')
 
-
-
 # Plotting the scatter plot
 plt.clf()
 plt.figure()
-plt.xlim(0, episodes+10)
-plt.ylim(0, num_steps+10)
+plt.xlim(-1, episodes+episodes*0.1)
+plt.ylim(-1, num_steps+num_steps*0.1)
 plt.xlabel('Episode')
 plt.ylabel('Steps')
 plt.plot(range(episodes), amount_of_moves, 'bo')
