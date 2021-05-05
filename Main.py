@@ -96,8 +96,13 @@ class NN():
         self.model = tf.keras.Sequential()
         # Adding the input layer
         self.model.add(tf.keras.layers.InputLayer(input_shape = (input_size + 3, ) ))
-        # Add the output layer with softmax
-        self.model.add(tf.keras.layers.Dense( units = 1, activation='relu') )
+
+        # Hidden layer        
+        self.model.add( tf.keras.layers.Dense( units = 8, activation = 'sigmoid' ) )
+        
+        # Add the output layer with sigmoid
+        self.model.add(tf.keras.layers.Dense( units = 1, activation='sigmoid') )
+        
         # Compile model        
         self.model.compile(loss = 'mean_squared_error')
         
@@ -138,9 +143,9 @@ discount = 0.95
 lrate = 0.1
 number_tiles = 8
 num_steps = 1000
-episodes = 10
-grate = 0.9
-grate_decay_rate = 0.9
+episodes = 100
+grate = 1
+grate_decay_rate = 0.5
 
 
 # One run of a SARSA algorithm
